@@ -13,6 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: install libudev deps
+        run: |
+          sudo apt install -y pkg-config \
+            libusb-1.0-0-dev  libftdi1-dev \
+            libudev-dev  protobuf-compiler
 
       - uses: Swatinem/rust-cache@v2
 
