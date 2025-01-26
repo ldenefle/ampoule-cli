@@ -144,10 +144,12 @@ mod tests {
 
         let command = generate_proto(protos::Command {
             opcode: protos::Opcode::Ping.into(),
+            operation: None,
         });
 
         let mut response = generate_proto(protos::Response {
             opcode: protos::Opcode::Pong.into(),
+            success: true,
         });
 
         transport
