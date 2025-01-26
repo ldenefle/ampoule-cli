@@ -2,7 +2,7 @@ use prost::Message;
 use std::io::{Read, Write};
 use std::time::{Duration, Instant};
 pub mod protos {
-    include!(concat!(env!("OUT_DIR"), "/command.rs"));
+    include!(concat!(env!("OUT_DIR"), "/ampoule.rs"));
 }
 
 use anyhow::{anyhow, Result};
@@ -66,12 +66,40 @@ impl Device {
 
         let response = protos::Response::decode(&payload as &[u8])?;
 
-        Ok(response)
+        if !response.success {
+            Err(anyhow!("Command failed"))
+        } else {
+            Ok(response)
+        }
+    }
+
+    pub fn set_led(&mut self, index: u32, on: bool) -> Result<()> {
+        let color: i32 = if on {
+            protos::led::Color::White.into()
+        } else {
+            protos::led::Color::Off.into()
+        };
+
+        let led = protos::Led { color, index };
+
+        let command = protos::Command {
+            opcode: protos::Opcode::SetLed as i32,
+            operation: Some(protos::command::Operation::Led(led)),
+        };
+
+        let response = self.send_command(command)?;
+
+        if response.opcode != protos::Opcode::SetLed.into() {
+            Err(anyhow!("Got wrong opcode as response"))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn ping(&mut self) -> Result<()> {
         let command = protos::Command {
             opcode: protos::Opcode::Ping as i32,
+            operation: None,
         };
 
         let response = self.send_command(command)?;
